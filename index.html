@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Киберпанк 7 | Лаги видео / потеря кадров</title>
+    <title>КИБЕРПАНК 7 | ОГРОМНАЯ цифра | Лаги видео</title>
     <style>
         * {
             margin: 0;
@@ -22,52 +22,53 @@
             position: relative;
         }
 
-        /* Контейнер для цифры */
+        /* Контейнер для цифры — на всю ширину экрана */
         .glitch-container {
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            height: 100vh;
         }
 
         /* 
-          ОСНОВНАЯ ЦИФРА 7 — максимально похожа на обычную семерку (как в чате),
-          но с абсолютно прямыми углами (рубленая, без скруглений).
-          Используем четкий, угловатый шрифт, но чтобы гарантировать отсутствие скруглений —
-          применяем текстовую цифру, но с дополнительным SVG-слоем? Нет, шрифт 'Courier New' 
-          в жирном начертании дает очень прямые формы. Для полной уверенности добавим
-          text-rendering: geometricPrecision и уберем сглаживание.
-          
-          Однако, предыдущие замечания про скругления — я исправляю это через 
-          жесткий моноширинный шрифт 'Courier New', у него действительно нет скруглений,
-          это классический пиксельный шрифт с прямыми углами. Плюс добавим
-          небольшой хак: тень без размытия, чтобы подчеркнуть углы.
+          ОСНОВНАЯ ЦИФРА 7 — ОГРОМНАЯ, на всю высоту экрана.
+          Используем clamp + vw/vh, чтобы цифра занимала максимальное пространство.
+          Шрифт — строго рубленый, без скруглений: 'Courier New' в жирном начертании
+          дает идеально прямые углы. Дополнительно отключаем сглаживание.
         */
         .digit-seven {
             font-family: 'Courier New', 'Fira Code', 'IBM Plex Mono', monospace;
             font-weight: 900;
-            font-size: 32vw;
+            font-size: 70vh;      /* ОГРОМНАЯ — почти во всю высоту экрана */
             color: #ff0000;
             background: transparent;
             text-shadow: none;
             line-height: 1;
             letter-spacing: 0;
             font-style: normal;
-            /* Жесткая отрисовка без сглаживания */
+            /* Жесткая отрисовка без сглаживания для максимально рубленого вида */
             -webkit-font-smoothing: none;
             font-smooth: never;
             text-rendering: geometricPrecision;
+            /* Центрирование */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Для больших экранов фиксируем размер */
-        @media (min-width: 1400px) {
+        /* Адаптация для очень широких экранов — чтобы не вылезала за пределы */
+        @media (min-aspect-ratio: 1/1) {
             .digit-seven {
-                font-size: 420px;
+                font-size: 70vw;  /* на широких экранах используем ширину */
             }
         }
+
+        /* Для мобильных — тоже огромная, но с небольшим отступом */
         @media (max-width: 700px) {
             .digit-seven {
-                font-size: 28vw;
+                font-size: 60vw;
             }
         }
 
@@ -75,6 +76,7 @@
           СЛОИ ДЛЯ ЭФФЕКТА "ЛАГАЮЩЕГО ВИДЕО" (киберпанк-стайл)
           Несколько копий цифры, которые будут резко появляться, смещаться,
           создавать артефакты, "рваный кадр" и цветовую аберрацию.
+          Размер шрифта наследуется от основного через em или абсолютно такой же.
         */
         .glitch-layer {
             position: absolute;
@@ -84,22 +86,26 @@
             height: 100%;
             font-family: 'Courier New', 'Fira Code', 'IBM Plex Mono', monospace;
             font-weight: 900;
-            font-size: 32vw;
+            font-size: 70vh;      /* такой же огромный размер */
             background: transparent;
             pointer-events: none;
             white-space: nowrap;
             opacity: 0;
             visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        @media (min-width: 1400px) {
+        @media (min-aspect-ratio: 1/1) {
             .glitch-layer {
-                font-size: 420px;
+                font-size: 70vw;
             }
         }
+
         @media (max-width: 700px) {
             .glitch-layer {
-                font-size: 28vw;
+                font-size: 60vw;
             }
         }
 
@@ -110,7 +116,7 @@
 
         /* Сдвиг кадра влево с разрывом (loss of sync) */
         .glitch-shift-left {
-            transform: translate(-12px, 0);
+            transform: translate(-5%, 0);
             opacity: 0.95;
             visibility: visible;
             clip-path: inset(5% 0 15% 0);
@@ -118,15 +124,15 @@
 
         /* Сдвиг вправо + синий/красный ореол (аберрация) */
         .glitch-aberration {
-            transform: translate(14px, 2px);
+            transform: translate(6%, 1%);
             opacity: 0.9;
             visibility: visible;
-            text-shadow: -6px 0 #00ffff, 6px 0 #ff00ff;
+            text-shadow: -0.04em 0 #00ffff, 0.04em 0 #ff00ff;
         }
 
         /* Горизонтальный разрыв кадра (как при повреждении видеопотока) */
         .glitch-horizontal-tear {
-            transform: translate(5px, -4px);
+            transform: translate(2%, -1%);
             opacity: 0.95;
             visibility: visible;
             clip-path: inset(12% 0 28% 0);
@@ -134,7 +140,7 @@
 
         /* "Застывший" кадр с наложением */
         .glitch-frozen-frame {
-            transform: translate(-8px, 3px) skewX(2deg);
+            transform: translate(-3%, 1%) skewX(2deg);
             opacity: 0.9;
             visibility: visible;
             filter: contrast(1.6) brightness(1.2);
@@ -142,7 +148,7 @@
 
         /* Эффект "битых пикселей" — множественные полосы */
         .glitch-pixel-shatter {
-            transform: translate(6px, -2px);
+            transform: translate(3%, -0.5%);
             opacity: 0.9;
             visibility: visible;
             clip-path: polygon(0% 0%, 100% 0%, 100% 8%, 0% 8%, 0% 22%, 100% 22%, 100% 36%, 0% 36%, 0% 58%, 100% 58%, 100% 72%, 0% 72%, 0% 86%, 100% 86%);
@@ -150,23 +156,23 @@
 
         /* "Дрожание" кадра (вибрация видео) */
         .glitch-vibration {
-            transform: translate(3px, -5px);
+            transform: translate(1%, -2%);
             opacity: 0.85;
             visibility: visible;
             animation: videoShake 0.06s infinite;
         }
 
         @keyframes videoShake {
-            0% { transform: translate(0px, 0px); }
-            25% { transform: translate(-5px, 2px); }
-            50% { transform: translate(7px, -3px); }
-            75% { transform: translate(-3px, -1px); }
-            100% { transform: translate(4px, 4px); }
+            0% { transform: translate(0%, 0%); }
+            25% { transform: translate(-2%, 1%); }
+            50% { transform: translate(3%, -1%); }
+            75% { transform: translate(-1%, -0.5%); }
+            100% { transform: translate(2%, 1.5%); }
         }
 
         /* Потеря синхронизации — половинчатый кадр */
         .glitch-sync-loss {
-            transform: translate(-6px, 0);
+            transform: translate(-3%, 0);
             opacity: 0.7;
             visibility: visible;
             clip-path: inset(0 0 50% 0);
@@ -174,74 +180,89 @@
 
         /* Цифровые артефакты (зеленый/пурпурный оттенок) */
         .glitch-digital-artifact {
-            transform: translate(9px, -3px);
+            transform: translate(4%, -1%);
             opacity: 0.9;
             visibility: visible;
-            text-shadow: -5px 0 #0f0, 5px 0 #f0f;
+            text-shadow: -0.03em 0 #0f0, 0.03em 0 #f0f;
         }
 
         /* Сжатие кадра (эффект "сжатого видео") */
         .glitch-squeeze-frame {
-            transform: scaleX(0.88) translate(12px, 0);
+            transform: scaleX(0.88) translate(6%, 0);
             opacity: 0.9;
             visibility: visible;
         }
 
         /* Резкий сдвиг с размытием (потеря фокуса) */
         .glitch-blur-shift {
-            transform: translate(-10px, 5px);
+            transform: translate(-4%, 2%);
             opacity: 0.8;
             visibility: visible;
-            filter: blur(1.2px);
+            filter: blur(1.5px);
         }
 
         /* "Полоски" как при повреждении видеопамяти */
         .glitch-rain-lines {
-            transform: translate(4px, -2px);
+            transform: translate(2%, -1%);
             opacity: 0.9;
             visibility: visible;
-            background: repeating-linear-gradient(90deg, rgba(255,0,0,0.3) 0px, rgba(255,0,0,0.3) 2px, transparent 2px, transparent 8px);
+            background: repeating-linear-gradient(90deg, rgba(255,0,0,0.3) 0px, rgba(255,0,0,0.3) 3px, transparent 3px, transparent 12px);
             background-blend-mode: overlay;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: #ff0000;
         }
 
         /* Наложение "призрака" предыдущего кадра */
         .glitch-ghost-frame {
-            transform: translate(-7px, 4px);
+            transform: translate(-3%, 2%);
             opacity: 0.85;
             visibility: visible;
-            text-shadow: 8px 0 #ff0000, -4px 0 #ff6666;
+            text-shadow: 0.06em 0 #ff0000, -0.03em 0 #ff6666;
         }
 
         /* Эффект "ряби" как на старом мониторе */
         .glitch-ripple-scan {
-            transform: skewX(-3deg) translate(5px, -2px);
+            transform: skewX(-3deg) translate(2%, -1%);
             opacity: 0.9;
             visibility: visible;
             clip-path: inset(5% 0 20% 0);
+        }
+        
+        /* Сдвиг с инверсией (эффект поврежденного видеопотока) */
+        .glitch-invert-shift {
+            transform: translate(-5%, 1%);
+            opacity: 0.85;
+            visibility: visible;
+            filter: invert(0.15);
+            text-shadow: -0.05em 0 #ff4444, 0.05em 0 #ff0000;
         }
 
         /* 
           Эффекты для основной цифры (чтобы создать ощущение, что "видео" лагает целиком)
         */
         .main-glitch-shift {
-            transform: translate(6px, -3px);
+            transform: translate(2%, -1%);
             transition: none;
         }
         .main-glitch-fade {
-            opacity: 0.4;
+            opacity: 0.35;
         }
         .main-glitch-stretch {
-            transform: scaleX(1.05) translate(-4px, 0);
+            transform: scaleX(1.04) translate(-2%, 0);
         }
         .main-glitch-color {
-            text-shadow: -3px 0 #0ff, 3px 0 #f0f;
+            text-shadow: -0.03em 0 #0ff, 0.03em 0 #f0f;
+        }
+        .main-glitch-skew {
+            transform: skewX(2deg) translate(-1%, 1%);
         }
     </style>
 </head>
 <body>
 
 <div class="glitch-container">
-    <!-- ОСНОВНАЯ ЦИФРА 7 — рубленая, без скруглений, похожа на обычную семерку -->
+    <!-- ОСНОВНАЯ ЦИФРА 7 — ОГРОМНАЯ, рубленая, без скруглений, похожа на обычную семерку -->
     <div class="digit-seven" id="mainDigit">7</div>
     
     <!-- 
@@ -258,6 +279,8 @@
     <div class="glitch-layer" id="glitch8">7</div>
     <div class="glitch-layer" id="glitch9">7</div>
     <div class="glitch-layer" id="glitch10">7</div>
+    <div class="glitch-layer" id="glitch11">7</div>
+    <div class="glitch-layer" id="glitch12">7</div>
 </div>
 
 <script>
@@ -276,7 +299,9 @@
             document.getElementById('glitch7'),
             document.getElementById('glitch8'),
             document.getElementById('glitch9'),
-            document.getElementById('glitch10')
+            document.getElementById('glitch10'),
+            document.getElementById('glitch11'),
+            document.getElementById('glitch12')
         ];
         
         // Список киберпанк-эффектов (лагающее видео)
@@ -293,7 +318,8 @@
             'glitch-blur-shift',
             'glitch-rain-lines',
             'glitch-ghost-frame',
-            'glitch-ripple-scan'
+            'glitch-ripple-scan',
+            'glitch-invert-shift'
         ];
         
         // Эффекты для основной цифры (усиление лага)
@@ -301,7 +327,8 @@
             'main-glitch-shift',
             'main-glitch-fade',
             'main-glitch-stretch',
-            'main-glitch-color'
+            'main-glitch-color',
+            'main-glitch-skew'
         ];
         
         // Функция полной очистки всех глитчей (возвращаем идеальное состояние)
@@ -317,6 +344,7 @@
                     layer.style.clipPath = '';
                     layer.style.textShadow = '';
                     layer.style.background = '';
+                    layer.style.color = '';
                 }
             }
             // Убираем искажения с основной цифры
@@ -350,8 +378,8 @@
                 activeTimeout = null;
             }
             
-            // Количество одновременно "испорченных" слоёв: от 3 до 6 (интенсивный лаг)
-            const numLayers = Math.floor(Math.random() * 4) + 3; // 3,4,5,6
+            // Количество одновременно "испорченных" слоёв: от 4 до 7 (интенсивный лаг для огромной цифры)
+            const numLayers = Math.floor(Math.random() * 4) + 4; // 4,5,6,7
             // Перемешиваем слои
             const shuffled = [...glitchLayers];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -376,23 +404,29 @@
                     mainDigit.style.opacity = '0.35';
                 }
                 if (randomMain === 'main-glitch-stretch') {
-                    mainDigit.style.transform = 'scaleX(1.06) translateX(-6px)';
+                    mainDigit.style.transform = 'scaleX(1.05) translateX(-3%)';
                 }
                 if (randomMain === 'main-glitch-color') {
-                    mainDigit.style.textShadow = '-5px 0 #0ff, 5px 0 #f0f';
+                    mainDigit.style.textShadow = '-0.04em 0 #0ff, 0.04em 0 #f0f';
+                }
+                if (randomMain === 'main-glitch-skew') {
+                    mainDigit.style.transform = 'skewX(2.5deg) translateX(-1.5%)';
+                }
+                if (randomMain === 'main-glitch-shift') {
+                    mainDigit.style.transform = 'translate(2.5%, -1.5%)';
                 }
             }
             
             // Дополнительный "взрыв" артефактов: у нескольких слоёв меняем цвет на киберпанк-оттенки
             for (let layer of selectedLayers) {
                 if (Math.random() < 0.6) {
-                    const neonColors = ['#ff0040', '#ff3300', '#ff0066', '#ff1a1a', '#ff4444'];
+                    const neonColors = ['#ff0040', '#ff3300', '#ff0066', '#ff1a1a', '#ff4444', '#ff2200'];
                     const randomColor = neonColors[Math.floor(Math.random() * neonColors.length)];
                     layer.style.color = randomColor;
                     // Сбросим после глитча (но общая очистка сделает это позже)
                     setTimeout(() => {
                         if (layer) layer.style.color = '';
-                    }, 600);
+                    }, 700);
                 }
             }
             
@@ -403,12 +437,23 @@
                     flickerLayer.style.animation = 'videoShake 0.04s infinite';
                     setTimeout(() => {
                         if (flickerLayer) flickerLayer.style.animation = '';
-                    }, 550);
+                    }, 600);
                 }
             }
             
-            // Длительность "лага" — как при зависании видео, чуть дольше (700-1000 мс)
-            const lagDuration = Math.floor(Math.random() * 300) + 700; // 700..1000 ms
+            // Дополнительный эффект: "заморозка" с наложением артефактов
+            if (Math.random() < 0.4) {
+                const freezeLayer = selectedLayers[Math.floor(Math.random() * selectedLayers.length)];
+                if (freezeLayer) {
+                    freezeLayer.style.filter = 'brightness(1.4) contrast(1.3)';
+                    setTimeout(() => {
+                        if (freezeLayer) freezeLayer.style.filter = '';
+                    }, 500);
+                }
+            }
+            
+            // Длительность "лага" — как при зависании видео (800-1100 мс)
+            const lagDuration = Math.floor(Math.random() * 300) + 800; // 800..1100 ms
             
             activeTimeout = setTimeout(() => {
                 clearAllGlitches();
@@ -418,7 +463,7 @@
         
         // 
         // ОСНОВНОЙ ЦИКЛ: 
-        // Цифра идеальна ~6 секунд, затем ВИДЕО-ЛАГ на 0.7-1 секунду,
+        // Огромная цифра идеальна ~6 секунд, затем ВИДЕО-ЛАГ на 0.8-1.1 секунды,
         // после чего снова идеальная картинка.
         // Эффект напоминает "зависание" или повреждение видеопотока в киберпанк-стиле.
         //
@@ -467,7 +512,7 @@
         // Изначально всё чисто
         clearAllGlitches();
         
-        console.log('🔥 Киберпанк-семерка (рубленая). Эффект "лагающего видео" длится 700-1000 мс, каждые ~6 секунд.');
+        console.log('🔥 ОГРОМНАЯ киберпанк-семерка (рубленая, без скруглений). Эффект "лагающего видео" длится 800-1100 мс, каждые ~6 секунд.');
     })();
 </script>
 

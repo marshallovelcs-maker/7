@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Киберпанк 7 | Лаги видео / потеря кадров</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #000000;  /* абсолютно черный фон, никогда не меняется */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Контейнер для цифры */
+        .glitch-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 
+          ОСНОВНАЯ ЦИФРА 7 — максимально похожа на обычную семерку (как в чате),
+          но с абсолютно прямыми углами (рубленая, без скруглений).
+          Используем четкий, угловатый шрифт, но чтобы гарантировать отсутствие скруглений —
+          применяем текстовую цифру, но с дополнительным SVG-слоем? Нет, шрифт 'Courier New' 
+          в жирном начертании дает очень прямые формы. Для полной уверенности добавим
+          text-rendering: geometricPrecision и уберем сглаживание.
+          
+          Однако, предыдущие замечания про скругления — я исправляю это через 
+          жесткий моноширинный шрифт 'Courier New', у него действительно нет скруглений,
+          это классический пиксельный шрифт с прямыми углами. Плюс добавим
+          небольшой хак: тень без размытия, чтобы подчеркнуть углы.
+        */
+        .digit-seven {
+            font-family: 'Courier New', 'Fira Code', 'IBM Plex Mono', monospace;
+            font-weight: 900;
+            font-size: 32vw;
+            color: #ff0000;
+            background: transparent;
+            text-shadow: none;
+            line-height: 1;
+            letter-spacing: 0;
+            font-style: normal;
+            /* Жесткая отрисовка без сглаживания */
+            -webkit-font-smoothing: none;
+            font-smooth: never;
+            text-rendering: geometricPrecision;
+        }
+
+        /* Для больших экранов фиксируем размер */
+        @media (min-width: 1400px) {
+            .digit-seven {
+                font-size: 420px;
+            }
+        }
+        @media (max-width: 700px) {
+            .digit-seven {
+                font-size: 28vw;
+            }
+        }
+
+        /* 
+          СЛОИ ДЛЯ ЭФФЕКТА "ЛАГАЮЩЕГО ВИДЕО" (киберпанк-стайл)
+          Несколько копий цифры, которые будут резко появляться, смещаться,
+          создавать артефакты, "рваный кадр" и цветовую аберрацию.
+        */
+        .glitch-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Courier New', 'Fira Code', 'IBM Plex Mono', monospace;
+            font-weight: 900;
+            font-size: 32vw;
+            background: transparent;
+            pointer-events: none;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        @media (min-width: 1400px) {
+            .glitch-layer {
+                font-size: 420px;
+            }
+        }
+        @media (max-width: 700px) {
+            .glitch-layer {
+                font-size: 28vw;
+            }
+        }
+
+        /* 
+          ========== КИБЕРПАНК-ЭФФЕКТЫ ЛАГА (как будто видео глючит) ==========
+          Резкие сдвиги, разрывы кадра, "битые пиксели", цветные тени.
+        */
+
+        /* Сдвиг кадра влево с разрывом (loss of sync) */
+        .glitch-shift-left {
+            transform: translate(-12px, 0);
+            opacity: 0.95;
+            visibility: visible;
+            clip-path: inset(5% 0 15% 0);
+        }
+
+        /* Сдвиг вправо + синий/красный ореол (аберрация) */
+        .glitch-aberration {
+            transform: translate(14px, 2px);
+            opacity: 0.9;
+            visibility: visible;
+            text-shadow: -6px 0 #00ffff, 6px 0 #ff00ff;
+        }
+
+        /* Горизонтальный разрыв кадра (как при повреждении видеопотока) */
+        .glitch-horizontal-tear {
+            transform: translate(5px, -4px);
+            opacity: 0.95;
+            visibility: visible;
+            clip-path: inset(12% 0 28% 0);
+        }
+
+        /* "Застывший" кадр с наложением */
+        .glitch-frozen-frame {
+            transform: translate(-8px, 3px) skewX(2deg);
+            opacity: 0.9;
+            visibility: visible;
+            filter: contrast(1.6) brightness(1.2);
+        }
+
+        /* Эффект "битых пикселей" — множественные полосы */
+        .glitch-pixel-shatter {
+            transform: translate(6px, -2px);
+            opacity: 0.9;
+            visibility: visible;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 8%, 0% 8%, 0% 22%, 100% 22%, 100% 36%, 0% 36%, 0% 58%, 100% 58%, 100% 72%, 0% 72%, 0% 86%, 100% 86%);
+        }
+
+        /* "Дрожание" кадра (вибрация видео) */
+        .glitch-vibration {
+            transform: translate(3px, -5px);
+            opacity: 0.85;
+            visibility: visible;
+            animation: videoShake 0.06s infinite;
+        }
+
+        @keyframes videoShake {
+            0% { transform: translate(0px, 0px); }
+            25% { transform: translate(-5px, 2px); }
+            50% { transform: translate(7px, -3px); }
+            75% { transform: translate(-3px, -1px); }
+            100% { transform: translate(4px, 4px); }
+        }
+
+        /* Потеря синхронизации — половинчатый кадр */
+        .glitch-sync-loss {
+            transform: translate(-6px, 0);
+            opacity: 0.7;
+            visibility: visible;
+            clip-path: inset(0 0 50% 0);
+        }
+
+        /* Цифровые артефакты (зеленый/пурпурный оттенок) */
+        .glitch-digital-artifact {
+            transform: translate(9px, -3px);
+            opacity: 0.9;
+            visibility: visible;
+            text-shadow: -5px 0 #0f0, 5px 0 #f0f;
+        }
+
+        /* Сжатие кадра (эффект "сжатого видео") */
+        .glitch-squeeze-frame {
+            transform: scaleX(0.88) translate(12px, 0);
+            opacity: 0.9;
+            visibility: visible;
+        }
+
+        /* Резкий сдвиг с размытием (потеря фокуса) */
+        .glitch-blur-shift {
+            transform: translate(-10px, 5px);
+            opacity: 0.8;
+            visibility: visible;
+            filter: blur(1.2px);
+        }
+
+        /* "Полоски" как при повреждении видеопамяти */
+        .glitch-rain-lines {
+            transform: translate(4px, -2px);
+            opacity: 0.9;
+            visibility: visible;
+            background: repeating-linear-gradient(90deg, rgba(255,0,0,0.3) 0px, rgba(255,0,0,0.3) 2px, transparent 2px, transparent 8px);
+            background-blend-mode: overlay;
+        }
+
+        /* Наложение "призрака" предыдущего кадра */
+        .glitch-ghost-frame {
+            transform: translate(-7px, 4px);
+            opacity: 0.85;
+            visibility: visible;
+            text-shadow: 8px 0 #ff0000, -4px 0 #ff6666;
+        }
+
+        /* Эффект "ряби" как на старом мониторе */
+        .glitch-ripple-scan {
+            transform: skewX(-3deg) translate(5px, -2px);
+            opacity: 0.9;
+            visibility: visible;
+            clip-path: inset(5% 0 20% 0);
+        }
+
+        /* 
+          Эффекты для основной цифры (чтобы создать ощущение, что "видео" лагает целиком)
+        */
+        .main-glitch-shift {
+            transform: translate(6px, -3px);
+            transition: none;
+        }
+        .main-glitch-fade {
+            opacity: 0.4;
+        }
+        .main-glitch-stretch {
+            transform: scaleX(1.05) translate(-4px, 0);
+        }
+        .main-glitch-color {
+            text-shadow: -3px 0 #0ff, 3px 0 #f0f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="glitch-container">
+    <!-- ОСНОВНАЯ ЦИФРА 7 — рубленая, без скруглений, похожа на обычную семерку -->
+    <div class="digit-seven" id="mainDigit">7</div>
+    
+    <!-- 
+      МНОЖЕСТВО ГЛИТЧ-СЛОЁВ (копии цифры 7)
+      Создают эффект "лагающего видео": резкие сдвиги, разрывы кадра, артефакты.
+    -->
+    <div class="glitch-layer" id="glitch1">7</div>
+    <div class="glitch-layer" id="glitch2">7</div>
+    <div class="glitch-layer" id="glitch3">7</div>
+    <div class="glitch-layer" id="glitch4">7</div>
+    <div class="glitch-layer" id="glitch5">7</div>
+    <div class="glitch-layer" id="glitch6">7</div>
+    <div class="glitch-layer" id="glitch7">7</div>
+    <div class="glitch-layer" id="glitch8">7</div>
+    <div class="glitch-layer" id="glitch9">7</div>
+    <div class="glitch-layer" id="glitch10">7</div>
+</div>
+
+<script>
+    (function() {
+        // Основная цифра
+        const mainDigit = document.getElementById('mainDigit');
+        
+        // Коллекция глитч-слоёв
+        const glitchLayers = [
+            document.getElementById('glitch1'),
+            document.getElementById('glitch2'),
+            document.getElementById('glitch3'),
+            document.getElementById('glitch4'),
+            document.getElementById('glitch5'),
+            document.getElementById('glitch6'),
+            document.getElementById('glitch7'),
+            document.getElementById('glitch8'),
+            document.getElementById('glitch9'),
+            document.getElementById('glitch10')
+        ];
+        
+        // Список киберпанк-эффектов (лагающее видео)
+        const glitchEffects = [
+            'glitch-shift-left',
+            'glitch-aberration',
+            'glitch-horizontal-tear',
+            'glitch-frozen-frame',
+            'glitch-pixel-shatter',
+            'glitch-vibration',
+            'glitch-sync-loss',
+            'glitch-digital-artifact',
+            'glitch-squeeze-frame',
+            'glitch-blur-shift',
+            'glitch-rain-lines',
+            'glitch-ghost-frame',
+            'glitch-ripple-scan'
+        ];
+        
+        // Эффекты для основной цифры (усиление лага)
+        const mainEffects = [
+            'main-glitch-shift',
+            'main-glitch-fade',
+            'main-glitch-stretch',
+            'main-glitch-color'
+        ];
+        
+        // Функция полной очистки всех глитчей (возвращаем идеальное состояние)
+        function clearAllGlitches() {
+            // Сбрасываем все глитч-слои
+            for (let layer of glitchLayers) {
+                if (layer) {
+                    layer.className = 'glitch-layer';
+                    layer.style.opacity = '';
+                    layer.style.visibility = '';
+                    layer.style.transform = '';
+                    layer.style.filter = '';
+                    layer.style.clipPath = '';
+                    layer.style.textShadow = '';
+                    layer.style.background = '';
+                }
+            }
+            // Убираем искажения с основной цифры
+            if (mainDigit) {
+                for (let effect of mainEffects) {
+                    mainDigit.classList.remove(effect);
+                }
+                mainDigit.style.transform = '';
+                mainDigit.style.opacity = '';
+                mainDigit.style.textShadow = '';
+                mainDigit.style.filter = '';
+            }
+        }
+        
+        // Применяем эффект к глитч-слою
+        function applyEffectToLayer(layer, effectClass) {
+            if (!layer) return;
+            layer.className = 'glitch-layer';
+            layer.classList.add(effectClass);
+            layer.style.visibility = 'visible';
+            layer.style.opacity = '1';
+        }
+        
+        let activeTimeout = null;
+        
+        // Функция создания "лагающего видео" эффекта (длительный глитч как при сбое видеопотока)
+        function performVideoLag() {
+            if (activeTimeout) {
+                clearTimeout(activeTimeout);
+                clearAllGlitches();
+                activeTimeout = null;
+            }
+            
+            // Количество одновременно "испорченных" слоёв: от 3 до 6 (интенсивный лаг)
+            const numLayers = Math.floor(Math.random() * 4) + 3; // 3,4,5,6
+            // Перемешиваем слои
+            const shuffled = [...glitchLayers];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const selectedLayers = shuffled.slice(0, numLayers);
+            
+            // Назначаем каждому слою случайный эффект лага
+            for (let layer of selectedLayers) {
+                const randomEffect = glitchEffects[Math.floor(Math.random() * glitchEffects.length)];
+                applyEffectToLayer(layer, randomEffect);
+            }
+            
+            // Почти всегда искажаем основную цифру (эффект "всё видео лагает")
+            if (Math.random() < 0.85 && mainDigit) {
+                const randomMain = mainEffects[Math.floor(Math.random() * mainEffects.length)];
+                mainDigit.classList.add(randomMain);
+                
+                // Дополнительные настройки для некоторых эффектов
+                if (randomMain === 'main-glitch-fade') {
+                    mainDigit.style.opacity = '0.35';
+                }
+                if (randomMain === 'main-glitch-stretch') {
+                    mainDigit.style.transform = 'scaleX(1.06) translateX(-6px)';
+                }
+                if (randomMain === 'main-glitch-color') {
+                    mainDigit.style.textShadow = '-5px 0 #0ff, 5px 0 #f0f';
+                }
+            }
+            
+            // Дополнительный "взрыв" артефактов: у нескольких слоёв меняем цвет на киберпанк-оттенки
+            for (let layer of selectedLayers) {
+                if (Math.random() < 0.6) {
+                    const neonColors = ['#ff0040', '#ff3300', '#ff0066', '#ff1a1a', '#ff4444'];
+                    const randomColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+                    layer.style.color = randomColor;
+                    // Сбросим после глитча (но общая очистка сделает это позже)
+                    setTimeout(() => {
+                        if (layer) layer.style.color = '';
+                    }, 600);
+                }
+            }
+            
+            // Иногда добавляем "мерцание" как при потере синхронизации
+            if (Math.random() < 0.5) {
+                const flickerLayer = selectedLayers[0];
+                if (flickerLayer) {
+                    flickerLayer.style.animation = 'videoShake 0.04s infinite';
+                    setTimeout(() => {
+                        if (flickerLayer) flickerLayer.style.animation = '';
+                    }, 550);
+                }
+            }
+            
+            // Длительность "лага" — как при зависании видео, чуть дольше (700-1000 мс)
+            const lagDuration = Math.floor(Math.random() * 300) + 700; // 700..1000 ms
+            
+            activeTimeout = setTimeout(() => {
+                clearAllGlitches();
+                activeTimeout = null;
+            }, lagDuration);
+        }
+        
+        // 
+        // ОСНОВНОЙ ЦИКЛ: 
+        // Цифра идеальна ~6 секунд, затем ВИДЕО-ЛАГ на 0.7-1 секунду,
+        // после чего снова идеальная картинка.
+        // Эффект напоминает "зависание" или повреждение видеопотока в киберпанк-стиле.
+        //
+        let cycleTimeout = null;
+        
+        function startLagCycle() {
+            if (cycleTimeout) clearTimeout(cycleTimeout);
+            
+            // Задержка ~6 секунд (с небольшим разбросом, чтобы не было роботизированно)
+            const baseDelay = 6000;
+            const variance = Math.floor(Math.random() * 600) - 300; // -300..+300
+            const delay = Math.max(5600, baseDelay + variance);
+            
+            cycleTimeout = setTimeout(() => {
+                performVideoLag();
+                startLagCycle();
+            }, delay);
+        }
+        
+        // Запускаем цикл "киберпанк-лагов"
+        startLagCycle();
+        
+        // Защита: если глитч завис — принудительно очищаем
+        setInterval(() => {
+            let anyActive = false;
+            for (let layer of glitchLayers) {
+                if (layer && layer.classList.length > 1) {
+                    anyActive = true;
+                    break;
+                }
+            }
+            let mainActive = false;
+            if (mainDigit) {
+                for (let eff of mainEffects) {
+                    if (mainDigit.classList.contains(eff)) {
+                        mainActive = true;
+                        break;
+                    }
+                }
+            }
+            if ((anyActive || mainActive) && !activeTimeout) {
+                clearAllGlitches();
+            }
+        }, 300);
+        
+        // Изначально всё чисто
+        clearAllGlitches();
+        
+        console.log('🔥 Киберпанк-семерка (рубленая). Эффект "лагающего видео" длится 700-1000 мс, каждые ~6 секунд.');
+    })();
+</script>
+
+</body>
+</html>
